@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import Navbar from "@/components/layout/Navbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,6 +11,8 @@ import { Briefcase, Target, BookOpen, Award } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import CVManager from "@/components/work/CVManager";
 import PortfolioManager from "@/components/work/PortfolioManager";
+import SkillTracker from "@/components/work/SkillTracker";
+import CareerMilestones from "@/components/work/CareerMilestones";
 
 const Work = () => {
   const { toast } = useToast();
@@ -48,10 +51,12 @@ const Work = () => {
         </div>
 
         <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="cv">CV Manager</TabsTrigger>
             <TabsTrigger value="portfolio">Portfolio</TabsTrigger>
+            <TabsTrigger value="skills">Skills</TabsTrigger>
+            <TabsTrigger value="milestones">Milestones</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview">
@@ -207,6 +212,14 @@ const Work = () => {
 
           <TabsContent value="portfolio">
             <PortfolioManager />
+          </TabsContent>
+
+          <TabsContent value="skills">
+            <SkillTracker />
+          </TabsContent>
+
+          <TabsContent value="milestones">
+            <CareerMilestones />
           </TabsContent>
         </Tabs>
       </main>
