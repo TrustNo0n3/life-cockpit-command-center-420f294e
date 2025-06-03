@@ -5,14 +5,17 @@ import ProgressRing from "@/components/dashboard/ProgressRing";
 import InsightItem from "@/components/dashboard/InsightItem";
 import QuickAddButton from "@/components/dashboard/QuickAddButton";
 import CalendarGlimpse from "@/components/dashboard/CalendarGlimpse";
-import SkillTree from "@/components/dashboard/SkillTree";
+import SkillTreeEnhanced from "@/components/dashboard/SkillTreeEnhanced";
 import YearPlanner from "@/components/dashboard/YearPlanner";
+import DomainXPBar from "@/components/dashboard/DomainXPBar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
+import useSkillSystem from "@/hooks/useSkillSystem";
 
 const Index = () => {
   const { toast } = useToast();
+  const { skillProgress, awardXP, getLevel, getXPProgress } = useSkillSystem();
   
   // Mock data for the calendar glimpse - properly typed
   const calendarEvents = [
@@ -24,6 +27,19 @@ const Index = () => {
 
   // Quick add handlers
   const handleQuickAdd = (type: string) => {
+    // Award XP based on action type
+    const domainMap: Record<string, keyof typeof skillProgress> = {
+      "Expense": "financial",
+      "Task": "work", 
+      "Workout": "physique",
+      "Journal": "mind"
+    };
+    
+    const domain = domainMap[type];
+    if (domain) {
+      awardXP(domain, 25, `Added ${type.toLowerCase()}`);
+    }
+    
     toast({
       title: `Add ${type}`,
       description: `This would open a form to add a new ${type.toLowerCase()}.`,
@@ -37,10 +53,11 @@ const Index = () => {
         <h1 className="text-3xl font-bold mb-6">Life Dashboard</h1>
         
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="skills">Skill Tree</TabsTrigger>
             <TabsTrigger value="planner">Year Planner</TabsTrigger>
+            <TabsTrigger value="gamification">Gamification</TabsTrigger>
           </TabsList>
           
           <TabsContent value="overview" className="space-y-6">
@@ -269,11 +286,45 @@ const Index = () => {
           </TabsContent>
           
           <TabsContent value="skills">
-            <SkillTree />
+            <SkillTreeEnhanced />
           </TabsContent>
           
           <TabsContent value="planner">
             <YearPlanner />
+          </TabsContent>
+          
+          <TabsContent value="gamification">
+            <Card>
+              <CardHeader>
+                <CardTitle>Gamification System</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {Object.entries(skillProgress).map(([domain, xp]) => (
+                    <DomainXPBar
+                      key={domain}
+                      domain={domain}
+                      level={getLevel(domain as keyof typeof skillProgress)}
+                      xpProgress={getXPProgress(domain as keyof typeof skillProgress)}
+                      color={
+                        domain === 'financial' ? '#2e7d32' :
+                        domain === 'work' ? '#1565c0' :
+                        domain === 'brain' ? '#6a1b9a' :
+                        domain === 'physique' ? '#d84315' :
+                        domain === 'mind' ? '#00838f' :
+                        '#f9a825'
+                      }
+                    />
+                  ))}
+                </div>
+                
+                <div className="text-center">
+                  <p className="text-muted-foreground">
+                    Complete activities in each domain to earn XP and level up your skills!
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </main>
