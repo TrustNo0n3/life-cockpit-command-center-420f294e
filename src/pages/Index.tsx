@@ -12,12 +12,12 @@ import { useToast } from "@/components/ui/use-toast";
 const Index = () => {
   const { toast } = useToast();
   
-  // Mock data for the calendar glimpse
+  // Mock data for the calendar glimpse - properly typed
   const calendarEvents = [
-    { title: "Pay Credit Card Bill", day: "Thu", type: "financial" },
-    { title: "Project Deadline", day: "Fri", type: "work" },
-    { title: "Finish Book Chapter 7", day: "Sat", type: "mind" },
-    { title: "Gym Session", day: "Today", type: "physique" },
+    { title: "Pay Credit Card Bill", day: "Thu", type: "financial" as const },
+    { title: "Project Deadline", day: "Fri", type: "work" as const },
+    { title: "Finish Book Chapter 7", day: "Sat", type: "mind" as const },
+    { title: "Gym Session", day: "Today", type: "physique" as const },
   ];
 
   // Quick add handlers
