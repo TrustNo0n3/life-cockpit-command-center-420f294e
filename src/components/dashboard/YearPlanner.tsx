@@ -1,13 +1,12 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Calendar as CalendarIcon, 
-  ChevronLeft, 
-  ChevronRight, 
   Plus,
   Clock,
   Target,
@@ -16,8 +15,14 @@ import {
   Brain,
   Dumbbell,
   BookOpen,
-  Star
+  Star,
+  Filter,
+  BarChart3,
+  Edit
 } from "lucide-react";
+import TimeBlockForm from "./TimeBlockForm";
+import CrossDomainAnalytics from "./CrossDomainAnalytics";
+import useSkillSystem from "@/hooks/useSkillSystem";
 
 interface TimeBlock {
   id: string;
@@ -28,12 +33,19 @@ interface TimeBlock {
   type: "goal" | "project" | "habit" | "event";
   progress: number;
   description?: string;
+  priority: "low" | "medium" | "high";
+  estimatedHours?: number;
 }
 
 const YearPlanner = () => {
+  const { awardXP } = useSkillSystem();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
-  const [viewMode, setViewMode] = useState<"month" | "quarter" | "year">("month");
+  const [viewMode, setViewMode] = useState<"month" | "quarter" | "year" | "analytics">("month");
+  const [showForm, setShowForm] = useState(false);
+  const [editingBlock, setEditingBlock] = useState<TimeBlock | undefined>();
+  const [filterDomain, setFilterDomain] = useState<string>("all");
+  const [filterType, setFilterType] = useState<string>("all");
 
   const [timeBlocks, setTimeBlocks] = useState<TimeBlock[]>([
     {
@@ -44,7 +56,9 @@ const YearPlanner = () => {
       endDate: new Date(2024, 5, 30),
       type: "goal",
       progress: 65,
-      description: "Save $10,000 for emergencies"
+      description: "Save $10,000 for emergencies",
+      priority: "high",
+      estimatedHours: 40
     },
     {
       id: "2",
@@ -54,7 +68,9 @@ const YearPlanner = () => {
       endDate: new Date(2024, 3, 15),
       type: "project",
       progress: 80,
-      description: "Professional development"
+      description: "Professional development",
+      priority: "high",
+      estimatedHours: 120
     },
     {
       id: "3",
@@ -64,7 +80,9 @@ const YearPlanner = () => {
       endDate: new Date(2024, 11, 31),
       type: "habit",
       progress: 45,
-      description: "20 minutes daily meditation"
+      description: "20 minutes daily meditation",
+      priority: "medium",
+      estimatedHours: 240
     },
     {
       id: "4",
@@ -74,7 +92,9 @@ const YearPlanner = () => {
       endDate: new Date(2024, 9, 15),
       type: "goal",
       progress: 30,
-      description: "Prepare for city marathon"
+      description: "Prepare for city marathon",
+      priority: "high",
+      estimatedHours: 200
     },
     {
       id: "5",
@@ -84,7 +104,9 @@ const YearPlanner = () => {
       endDate: new Date(2024, 7, 30),
       type: "project",
       progress: 55,
-      description: "Achieve conversational level"
+      description: "Achieve conversational level",
+      priority: "medium",
+      estimatedHours: 150
     },
     {
       id: "6",
@@ -94,7 +116,9 @@ const YearPlanner = () => {
       endDate: new Date(2024, 11, 31),
       type: "habit",
       progress: 25,
-      description: "Explore creative photography"
+      description: "Explore creative photography",
+      priority: "low",
+      estimatedHours: 100
     }
   ]);
 
@@ -123,8 +147,58 @@ const YearPlanner = () => {
     event: CalendarIcon,
   };
 
-  const getBlocksForDate = (date: Date) => {
+  const handleSaveBlock = (blockData: Omit<TimeBlock, 'id'>) => {
+    if (editingBlock) {
+      setTimeBlocks(prev => prev.map(block => 
+        block.id === editingBlock.id 
+          ? { ...blockData, id: editingBlock.id }
+          : block
+      ));
+      // Award XP for updating a time block
+      awardXP(blockData.domain as any, 15, "Updated time block");
+    } else {
+      const newBlock: TimeBlock = {
+        ...blockData,
+        id: Date.now().toString(),
+      };
+      setTimeBlocks(prev => [...prev, newBlock]);
+      // Award XP for creating a time block
+      awardXP(blockData.domain as any, 25, "Created time block");
+    }
+    setShowForm(false);
+    setEditingBlock(undefined);
+  };
+
+  const handleEditBlock = (block: TimeBlock) => {
+    setEditingBlock(block);
+    setShowForm(true);
+  };
+
+  const handleUpdateProgress = (blockId: string, newProgress: number) => {
+    setTimeBlocks(prev => prev.map(block => {
+      if (block.id === blockId) {
+        const updatedBlock = { ...block, progress: newProgress };
+        // Award XP for progress updates
+        if (newProgress > block.progress) {
+          const xpGain = newProgress === 100 ? 50 : 10;
+          awardXP(block.domain as any, xpGain, newProgress === 100 ? "Completed time block" : "Updated progress");
+        }
+        return updatedBlock;
+      }
+      return block;
+    }));
+  };
+
+  const getFilteredBlocks = () => {
     return timeBlocks.filter(block => {
+      const domainMatch = filterDomain === "all" || block.domain === filterDomain;
+      const typeMatch = filterType === "all" || block.type === filterType;
+      return domainMatch && typeMatch;
+    });
+  };
+
+  const getBlocksForDate = (date: Date) => {
+    return getFilteredBlocks().filter(block => {
       const blockStart = new Date(block.startDate);
       const blockEnd = new Date(block.endDate);
       return date >= blockStart && date <= blockEnd;
@@ -135,7 +209,7 @@ const YearPlanner = () => {
     const quarterStart = new Date(year, (quarter - 1) * 3, 1);
     const quarterEnd = new Date(year, quarter * 3, 0);
     
-    return timeBlocks.filter(block => {
+    return getFilteredBlocks().filter(block => {
       const blockStart = new Date(block.startDate);
       const blockEnd = new Date(block.endDate);
       return (blockStart <= quarterEnd && blockEnd >= quarterStart);
@@ -148,6 +222,9 @@ const YearPlanner = () => {
     { name: "Q3", months: "Jul - Sep", number: 3 },
     { name: "Q4", months: "Oct - Dec", number: 4 },
   ];
+
+  const domains = ["all", "financial", "work", "brain", "physique", "mind", "soul"];
+  const types = ["all", "goal", "project", "habit", "event"];
 
   return (
     <Card>
@@ -179,10 +256,52 @@ const YearPlanner = () => {
             >
               Year
             </Button>
+            <Button
+              variant={viewMode === "analytics" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setViewMode("analytics")}
+            >
+              <BarChart3 className="h-4 w-4 mr-1" />
+              Analytics
+            </Button>
           </div>
         </CardTitle>
       </CardHeader>
       <CardContent>
+        {/* Filters */}
+        <div className="flex gap-4 mb-6 p-4 bg-muted/50 rounded-lg">
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4" />
+            <span className="text-sm font-medium">Filters:</span>
+          </div>
+          <select 
+            value={filterDomain} 
+            onChange={(e) => setFilterDomain(e.target.value)}
+            className="text-sm bg-background border rounded px-2 py-1"
+          >
+            {domains.map(domain => (
+              <option key={domain} value={domain}>
+                {domain === "all" ? "All Domains" : domain.charAt(0).toUpperCase() + domain.slice(1)}
+              </option>
+            ))}
+          </select>
+          <select 
+            value={filterType} 
+            onChange={(e) => setFilterType(e.target.value)}
+            className="text-sm bg-background border rounded px-2 py-1"
+          >
+            {types.map(type => (
+              <option key={type} value={type}>
+                {type === "all" ? "All Types" : type.charAt(0).toUpperCase() + type.slice(1)}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {viewMode === "analytics" && (
+          <CrossDomainAnalytics timeBlocks={getFilteredBlocks()} />
+        )}
+
         {viewMode === "month" && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div>
@@ -219,6 +338,13 @@ const YearPlanner = () => {
                           <TypeIcon className="h-4 w-4" />
                           <span className="font-medium">{block.title}</span>
                           <Badge variant="secondary">{block.progress}%</Badge>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEditBlock(block)}
+                          >
+                            <Edit className="h-3 w-3" />
+                          </Button>
                         </div>
                         <p className="text-sm text-muted-foreground mb-2">{block.description}</p>
                         <div className="w-full bg-muted rounded-full h-2">
@@ -280,7 +406,7 @@ const YearPlanner = () => {
           <div className="space-y-6">
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
               {Object.entries(domainColors).map(([domain, color]) => {
-                const domainBlocks = timeBlocks.filter(block => block.domain === domain);
+                const domainBlocks = getFilteredBlocks().filter(block => block.domain === domain);
                 const avgProgress = domainBlocks.length > 0 
                   ? Math.round(domainBlocks.reduce((sum, block) => sum + block.progress, 0) / domainBlocks.length)
                   : 0;
@@ -306,14 +432,28 @@ const YearPlanner = () => {
             <div className="space-y-3">
               <div className="flex justify-between items-center">
                 <h3 className="font-semibold">All Time Blocks</h3>
-                <Button size="sm">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Block
-                </Button>
+                <Dialog open={showForm} onOpenChange={setShowForm}>
+                  <DialogTrigger asChild>
+                    <Button size="sm">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Block
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-2xl">
+                    <TimeBlockForm
+                      block={editingBlock}
+                      onSave={handleSaveBlock}
+                      onCancel={() => {
+                        setShowForm(false);
+                        setEditingBlock(undefined);
+                      }}
+                    />
+                  </DialogContent>
+                </Dialog>
               </div>
               
               <div className="grid gap-3">
-                {timeBlocks.map((block) => {
+                {getFilteredBlocks().map((block) => {
                   const DomainIcon = domainIcons[block.domain as keyof typeof domainIcons];
                   const TypeIcon = typeIcons[block.type];
                   return (
@@ -335,7 +475,16 @@ const YearPlanner = () => {
                         </p>
                       </div>
                       <div className="text-right">
-                        <Badge variant="secondary">{block.progress}%</Badge>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="secondary">{block.progress}%</Badge>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEditBlock(block)}
+                          >
+                            <Edit className="h-3 w-3" />
+                          </Button>
+                        </div>
                         <div className="w-20 bg-muted rounded-full h-2 mt-1">
                           <div
                             className="h-2 rounded-full transition-all"
