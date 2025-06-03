@@ -8,6 +8,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { Brain, Lightbulb, BookOpen, Target, FolderOpen, Plus, ExternalLink, Trash2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import IdeaVault from "@/components/brain/IdeaVault";
+import ResearchTracker from "@/components/brain/ResearchTracker";
+import LearningGoals from "@/components/brain/LearningGoals";
 
 interface BrainProject {
   id: string;
@@ -35,7 +38,9 @@ const BrainPage = () => {
       category: "AI",
       status: "in-progress",
       technologies: ["Python", "OpenAI API", "Flask"],
-      notes: "Focus on natural language processing for task management"
+      notes: "Focus on natural language processing for task management",
+      demoUrl: "https://my-ai-assistant.vercel.app",
+      githubUrl: "https://github.com/username/ai-assistant"
     },
     {
       id: "2",
@@ -53,7 +58,8 @@ const BrainPage = () => {
       category: "Cyber Security",
       status: "completed",
       technologies: ["Python", "Nmap", "SQLite"],
-      demoUrl: "https://demo.example.com"
+      demoUrl: "https://security-scanner-demo.com",
+      githubUrl: "https://github.com/username/network-scanner"
     }
   ]);
 
@@ -63,7 +69,9 @@ const BrainPage = () => {
     category: "AI",
     status: "idea" as const,
     technologies: "",
-    notes: ""
+    notes: "",
+    demoUrl: "",
+    githubUrl: ""
   });
 
   const categories = [
@@ -108,7 +116,9 @@ const BrainPage = () => {
       category: newProject.category,
       status: newProject.status,
       technologies: newProject.technologies.split(",").map(t => t.trim()).filter(t => t),
-      notes: newProject.notes || undefined
+      notes: newProject.notes || undefined,
+      demoUrl: newProject.demoUrl || undefined,
+      githubUrl: newProject.githubUrl || undefined
     };
 
     setProjects([...projects, project]);
@@ -118,7 +128,9 @@ const BrainPage = () => {
       category: "AI",
       status: "idea",
       technologies: "",
-      notes: ""
+      notes: "",
+      demoUrl: "",
+      githubUrl: ""
     });
     setIsAddingProject(false);
 
@@ -180,8 +192,11 @@ const BrainPage = () => {
         </div>
 
         <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="ideas">Ideas</TabsTrigger>
+            <TabsTrigger value="research">Research</TabsTrigger>
+            <TabsTrigger value="learning">Learning</TabsTrigger>
             <TabsTrigger value="portfolio">Portfolio</TabsTrigger>
           </TabsList>
 
@@ -198,14 +213,12 @@ const BrainPage = () => {
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-3">
-                        <div className="border rounded-lg p-3">
-                          <h4 className="font-semibold">Personal AI Assistant</h4>
-                          <p className="text-sm text-muted-foreground">Developing a custom chatbot</p>
-                        </div>
-                        <div className="border rounded-lg p-3">
-                          <h4 className="font-semibold">Smart Home Automation</h4>
-                          <p className="text-sm text-muted-foreground">IoT integration project</p>
-                        </div>
+                        {projects.filter(p => p.status === "in-progress").slice(0, 2).map(project => (
+                          <div key={project.id} className="border rounded-lg p-3">
+                            <h4 className="font-semibold">{project.title}</h4>
+                            <p className="text-sm text-muted-foreground">{project.description}</p>
+                          </div>
+                        ))}
                       </div>
                     </CardContent>
                   </Card>
@@ -214,7 +227,7 @@ const BrainPage = () => {
                     <CardHeader className="pb-3">
                       <CardTitle className="text-lg flex items-center gap-2">
                         <BookOpen className="h-5 w-5 text-brain" />
-                        Research Topics
+                        Research Progress
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -238,25 +251,31 @@ const BrainPage = () => {
 
                 <Card>
                   <CardHeader>
-                    <CardTitle>Idea Vault</CardTitle>
+                    <CardTitle>Quick Stats</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="border rounded-lg p-4">
-                        <h4 className="font-semibold mb-2">App Ideas</h4>
-                        <ul className="space-y-1 text-sm">
-                          <li>• Voice-controlled expense tracker</li>
-                          <li>• AR fitness companion</li>
-                          <li>• Habit formation game</li>
-                        </ul>
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                      <div className="text-center p-4 border rounded-lg">
+                        <div className="text-2xl font-bold text-brain">{projects.length}</div>
+                        <p className="text-sm text-muted-foreground">Total Projects</p>
                       </div>
-                      <div className="border rounded-lg p-4">
-                        <h4 className="font-semibold mb-2">Business Concepts</h4>
-                        <ul className="space-y-1 text-sm">
-                          <li>• Security consulting for SMBs</li>
-                          <li>• Tech education platform</li>
-                          <li>• Automation service</li>
-                        </ul>
+                      <div className="text-center p-4 border rounded-lg">
+                        <div className="text-2xl font-bold text-green-600">
+                          {projects.filter(p => p.status === "completed").length}
+                        </div>
+                        <p className="text-sm text-muted-foreground">Completed</p>
+                      </div>
+                      <div className="text-center p-4 border rounded-lg">
+                        <div className="text-2xl font-bold text-blue-600">
+                          {projects.filter(p => p.status === "in-progress").length}
+                        </div>
+                        <p className="text-sm text-muted-foreground">In Progress</p>
+                      </div>
+                      <div className="text-center p-4 border rounded-lg">
+                        <div className="text-2xl font-bold text-purple-600">
+                          {Object.keys(groupedProjects).length}
+                        </div>
+                        <p className="text-sm text-muted-foreground">Categories</p>
                       </div>
                     </div>
                   </CardContent>
@@ -304,7 +323,7 @@ const BrainPage = () => {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Target className="h-5 w-5 text-brain" />
-                      Learning Goals
+                      Active Learning Goals
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -314,14 +333,26 @@ const BrainPage = () => {
                         <p className="text-xs text-muted-foreground">Progress: 70%</p>
                       </div>
                       <div className="border-l-4 border-brain pl-3">
-                        <p className="font-semibold text-sm">Read 5 Tech Papers</p>
-                        <p className="text-xs text-muted-foreground">Progress: 3/5</p>
+                        <p className="font-semibold text-sm">Master Kubernetes</p>
+                        <p className="text-xs text-muted-foreground">Progress: 40%</p>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
               </div>
             </div>
+          </TabsContent>
+
+          <TabsContent value="ideas">
+            <IdeaVault />
+          </TabsContent>
+
+          <TabsContent value="research">
+            <ResearchTracker />
+          </TabsContent>
+
+          <TabsContent value="learning">
+            <LearningGoals />
           </TabsContent>
 
           <TabsContent value="portfolio">
@@ -408,6 +439,26 @@ const BrainPage = () => {
                             </select>
                           </div>
                         </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <Label htmlFor="demo-url">Demo URL (Optional)</Label>
+                            <Input
+                              id="demo-url"
+                              value={newProject.demoUrl}
+                              onChange={(e) => setNewProject({ ...newProject, demoUrl: e.target.value })}
+                              placeholder="https://your-demo.com"
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="github-url">GitHub URL (Optional)</Label>
+                            <Input
+                              id="github-url"
+                              value={newProject.githubUrl}
+                              onChange={(e) => setNewProject({ ...newProject, githubUrl: e.target.value })}
+                              placeholder="https://github.com/user/repo"
+                            />
+                          </div>
+                        </div>
                         <div>
                           <Label htmlFor="notes">Notes</Label>
                           <Textarea
@@ -471,15 +522,19 @@ const BrainPage = () => {
                               )}
                               <div className="flex gap-2">
                                 {project.demoUrl && (
-                                  <Button size="sm" variant="outline">
-                                    <ExternalLink className="h-4 w-4 mr-1" />
-                                    Demo
+                                  <Button size="sm" variant="outline" asChild>
+                                    <a href={project.demoUrl} target="_blank" rel="noopener noreferrer">
+                                      <ExternalLink className="h-4 w-4 mr-1" />
+                                      Demo
+                                    </a>
                                   </Button>
                                 )}
                                 {project.githubUrl && (
-                                  <Button size="sm" variant="outline">
-                                    <ExternalLink className="h-4 w-4 mr-1" />
-                                    GitHub
+                                  <Button size="sm" variant="outline" asChild>
+                                    <a href={project.githubUrl} target="_blank" rel="noopener noreferrer">
+                                      <ExternalLink className="h-4 w-4 mr-1" />
+                                      GitHub
+                                    </a>
                                   </Button>
                                 )}
                               </div>
