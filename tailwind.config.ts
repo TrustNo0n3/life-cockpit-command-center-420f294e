@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,6 +62,37 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				// Domain-specific colors
+				financial: {
+					DEFAULT: '#2e7d32',
+					light: '#4caf50',
+					lighter: '#a5d6a7',
+				},
+				work: {
+					DEFAULT: '#1565c0',
+					light: '#42a5f5', 
+					lighter: '#90caf9',
+				},
+				brain: {
+					DEFAULT: '#6a1b9a',
+					light: '#9c27b0',
+					lighter: '#ce93d8',
+				},
+				physique: {
+					DEFAULT: '#d84315',
+					light: '#ff5722',
+					lighter: '#ffab91',
+				},
+				mind: {
+					DEFAULT: '#00838f',
+					light: '#00bcd4',
+					lighter: '#80deea',
+				},
+				soul: {
+					DEFAULT: '#f9a825',
+					light: '#ffc107',
+					lighter: '#ffe082',
 				}
 			},
 			borderRadius: {
@@ -84,11 +116,16 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				'pulse-gentle': {
+					'0%, 100%': { opacity: '1' },
+					'50%': { opacity: '0.8' },
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'pulse-gentle': 'pulse-gentle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
 			}
 		}
 	},
