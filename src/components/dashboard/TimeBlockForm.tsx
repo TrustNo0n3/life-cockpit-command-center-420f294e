@@ -35,9 +35,9 @@ const TimeBlockForm = ({ block, onSave, onCancel }: TimeBlockFormProps) => {
   const [domain, setDomain] = useState(block?.domain || "");
   const [startDate, setStartDate] = useState<Date | undefined>(block?.startDate || new Date());
   const [endDate, setEndDate] = useState<Date | undefined>(block?.endDate || new Date());
-  const [type, setType] = useState(block?.type || "goal");
+  const [type, setType] = useState<"goal" | "project" | "habit" | "event">(block?.type || "goal");
   const [description, setDescription] = useState(block?.description || "");
-  const [priority, setPriority] = useState(block?.priority || "medium");
+  const [priority, setPriority] = useState<"low" | "medium" | "high">(block?.priority || "medium");
   const [estimatedHours, setEstimatedHours] = useState(block?.estimatedHours?.toString() || "");
   const [progress, setProgress] = useState(block?.progress || 0);
 
@@ -72,9 +72,9 @@ const TimeBlockForm = ({ block, onSave, onCancel }: TimeBlockFormProps) => {
       domain,
       startDate,
       endDate,
-      type: type as "goal" | "project" | "habit" | "event",
+      type,
       description,
-      priority: priority as "low" | "medium" | "high",
+      priority,
       estimatedHours: estimatedHours ? parseInt(estimatedHours) : undefined,
       progress,
     });
@@ -123,7 +123,7 @@ const TimeBlockForm = ({ block, onSave, onCancel }: TimeBlockFormProps) => {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="type">Type</Label>
-              <Select value={type} onValueChange={setType}>
+              <Select value={type} onValueChange={(value) => setType(value as "goal" | "project" | "habit" | "event")}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -138,7 +138,7 @@ const TimeBlockForm = ({ block, onSave, onCancel }: TimeBlockFormProps) => {
             </div>
             <div>
               <Label htmlFor="priority">Priority</Label>
-              <Select value={priority} onValueChange={setPriority}>
+              <Select value={priority} onValueChange={(value) => setPriority(value as "low" | "medium" | "high")}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
